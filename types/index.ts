@@ -1,8 +1,8 @@
 // ====== USER PARAMS
 export type CreateUserParams = {
   clerkId: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   username: string;
   email: string;
   photo: string;
@@ -113,7 +113,7 @@ export type CheckoutOrderParams = {
 };
 
 export type CreateOrderParams = {
-  stripeId: string;
+  // stripeId: string;
   eventId: string;
   buyerId: string;
   totalAmount: string;
