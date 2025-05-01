@@ -11,7 +11,7 @@ export const headerLinks = [
   },
   {
     label: "Create Event",
-    route: "/create-event",
+    route: "/events/create",
     roles: ["admin"], // hanya admin
   },
   {
