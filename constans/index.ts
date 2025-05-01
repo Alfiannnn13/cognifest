@@ -6,7 +6,7 @@ export const headerLinks = [
   },
   {
     label: "Events",
-    route: "/events",
+    route: "#events",
     roles: ["user", "admin"], // semua user bisa lihat
   },
   {
