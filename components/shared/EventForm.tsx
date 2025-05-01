@@ -394,7 +394,7 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
         return;
       }
 
-      uploadedImageUrl = uploadedImages[0].url;
+      uploadedImageUrl = uploadedImages[0].ufsUrl;
     }
 
     if (type === "Create") {
