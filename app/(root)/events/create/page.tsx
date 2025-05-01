@@ -5,6 +5,19 @@ const CreateEvent = async () => {
   const { sessionClaims } = await auth();
 
   const userId = sessionClaims?.userId as string;
+  const metadata = sessionClaims?.publicMetadata as { role?: string };
+  const userRole = metadata?.role;
+
+  if (userRole !== "admin") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+        <h2 className="text-2xl font-bold text-red-600">Akses Ditolak</h2>
+        <p className="mt-2 text-gray-600">
+          Halaman ini hanya bisa diakses oleh admin.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
