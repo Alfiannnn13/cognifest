@@ -687,6 +687,27 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="quota"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Kuota"
+                    {...field}
+                    value={field.value ?? ""} // biar gak error waktu value kosong
+                    onChange={
+                      (e) => field.onChange(e.target.valueAsNumber) // 💡 Ini yang penting!
+                    }
+                    className="input-field"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <Button

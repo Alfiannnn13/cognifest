@@ -32,4 +32,5 @@ export const eventDefaultValues = {
   price: "",
   isFree: false,
   url: "",
+  quota: 1,
 };

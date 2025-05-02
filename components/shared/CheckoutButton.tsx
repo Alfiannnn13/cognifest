@@ -14,18 +14,18 @@ const CheckoutButton = ({ event }: { event: IEvent }) => {
   return (
     <div className="flex items-center gap-3">
       {hasEventFinished ? (
-        <p className="p-2 text-red-400">
-          Sorry, tickets are no longer available.
-        </p>
+        <p className="p-2 text-red-400">Maaf, Kuota Penuh</p>
       ) : (
         <>
           <SignedOut>
             <Button asChild className="button rounded-full" size="lg">
-              <Link href="/sign-in">Get Tickets</Link>
+              <Link href="/sign-in">Daftar</Link>
             </Button>
           </SignedOut>
 
-          <SignedIn></SignedIn>
+          <SignedIn>
+            {/* <Checkout event={event} userId={userId} /> */}
+          </SignedIn>
         </>
       )}
     </div>
