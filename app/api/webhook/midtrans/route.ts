@@ -3,7 +3,8 @@ import midtransClient from "midtrans-client";
 import { connectToDatabase } from "@/lib/database";
 import { saveOrderFromWebhook } from "@/lib/actions/order.actions";
 import User from "@/lib/database/models/user.model";
-import Event from "@/lib/database/models/event.model"; // Tambahkan import Event
+import Event from "@/lib/database/models/event.model";
+import { ObjectId } from "mongodb"; // Mengimpor ObjectId untuk konversi
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -29,15 +30,21 @@ export async function POST(req: Request) {
     body.transaction_status === "settlement" ||
     body.transaction_status === "capture"
   ) {
-    const eventId = body?.order_id.split("-")[0]; // Ambil eventId dari order_id
+    // Ambil eventId yang valid dari order_id
+    const orderId = body?.order_id; // Misalnya "ORDER-12345"
+    const eventId = orderId.split("-")[1]; // Ambil bagian setelah "-" (misalnya 12345)
+
     const buyerEmail = body?.customer_details?.email; // Email dari webhook
 
     try {
       // Koneksi ke database
       await connectToDatabase();
 
+      // Pastikan eventId adalah ObjectId yang valid
+      const eventObjectId = new ObjectId(eventId); // Konversi string ke ObjectId
+
       // Ambil data event dari database
-      const event = await Event.findOne({ _id: eventId });
+      const event = await Event.findOne({ _id: eventObjectId });
 
       if (!event) {
         console.error("[MIDTRANS WEBHOOK] Event not found");
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
 
       // Menyusun data order yang akan disimpan
       const orderData = {
-        eventId,
+        eventId: eventObjectId.toString(), // Menggunakan ObjectId yang valid
         eventTitle: event.title, // Mengambil title dari database
         buyerEmail: user.email, // Menggunakan email dari database
         totalAmount: Number(body?.gross_amount),
@@ -75,5 +82,3 @@ export async function POST(req: Request) {
     { status: 200 }
   );
 }
-
-// tes
