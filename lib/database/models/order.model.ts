@@ -50,35 +50,3 @@ const OrderSchema = new Schema({
 const Order = models.Order || model("Order", OrderSchema);
 
 export default Order;
-
-// new
-// const OrderSchema = new Schema({
-//   createdAt: {
-//     type: Date,
-//     default: Date.now,
-//   },
-//   totalAmount: {
-//     type: String,
-//   },
-//   status: {
-//     type: String,
-//     enum: ["pending", "confirmed", "cancelled"],
-//     default: "pending",
-//   },
-//   event: {
-//     type: Schema.Types.ObjectId,
-//     ref: "Event",
-//     required: true,
-//   },
-//   buyerId: {
-//     type: String, // Clerk userId
-//     required: true,
-//   },
-//   buyerUsername: String,
-//   buyerEmail: String,
-//   buyerFirstName: String,
-//   buyerLastName: String,
-// });
-
-// const Order = models.Order || model("Order", OrderSchema);
-// export default Order;
