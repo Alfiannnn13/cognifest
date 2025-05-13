@@ -54,14 +54,17 @@ export const createOrder = async (order: CreateOrderParams) => {
     await connectToDatabase();
 
     const newOrder = await Order.create({
-      ...order,
-      event: order.eventId,
-      buyer: order.buyerId,
+      stripeId: order.stripeId,
+      totalAmount: order.totalAmount,
+      createdAt: order.createdAt || new Date(),
+      event: new ObjectId(order.eventId),
+      buyer: new ObjectId(order.buyerId),
     });
 
     return JSON.parse(JSON.stringify(newOrder));
   } catch (error) {
-    handleError(error);
+    console.error("Create Order Error:", error);
+    throw error;
   }
 };
 
