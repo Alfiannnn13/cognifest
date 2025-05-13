@@ -1,49 +1,77 @@
-// app/api/webhook/midtrans/route.ts
-
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import midtransClient from "midtrans-client";
-import { CreateOrderParams } from "@/types";
 import { connectToDatabase } from "@/lib/database";
-import Order from "@/lib/database/models/order.model";
+import { saveOrderFromWebhook } from "@/lib/actions/order.actions";
+import User from "@/lib/database/models/user.model";
+import Event from "@/lib/database/models/event.model"; // Tambahkan import Event
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const serverKey = process.env.MIDTRANS_SERVER_KEY!;
+export async function POST(req: Request) {
+  const body = await req.json();
 
-    const core = new midtransClient.CoreApi({
-      isProduction: false,
-      serverKey,
-    });
+  const serverKey = process.env.MIDTRANS_SERVER_KEY!;
+  const core = new midtransClient.CoreApi({
+    isProduction: false,
+    serverKey,
+  });
 
-    const notificationResponse = await core.transaction.notification(body);
+  const signatureKey = body.signature_key;
+  const expectedSignature = require("crypto")
+    .createHash("sha512")
+    .update(body.order_id + body.status_code + body.gross_amount + serverKey)
+    .digest("hex");
 
-    const { order_id, transaction_status, gross_amount } = notificationResponse;
+  if (signatureKey !== expectedSignature) {
+    console.error("[MIDTRANS] Invalid signature");
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
 
-    if (
-      transaction_status === "settlement" ||
-      transaction_status === "capture"
-    ) {
+  if (
+    body.transaction_status === "settlement" ||
+    body.transaction_status === "capture"
+  ) {
+    const eventId = body?.order_id.split("-")[0]; // Ambil eventId dari order_id
+    const buyerEmail = body?.customer_details?.email; // Email dari webhook
+
+    try {
+      // Koneksi ke database
       await connectToDatabase();
 
-      const orderData: CreateOrderParams = {
-        stripeId: order_id,
-        eventId: body.item_details[0].id,
-        buyerId: body.customer_details.email ?? "guest", // bisa diganti sesuai strukturmu
-        totalAmount: gross_amount,
-        createdAt: new Date(),
+      // Ambil data event dari database
+      const event = await Event.findOne({ _id: eventId });
+
+      if (!event) {
+        console.error("[MIDTRANS WEBHOOK] Event not found");
+        return NextResponse.json({ error: "Event not found" }, { status: 404 });
+      }
+
+      // Ambil data user berdasarkan email
+      const user = await User.findOne({ email: buyerEmail });
+
+      if (!user) {
+        console.error("[MIDTRANS WEBHOOK] User not found");
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      // Menyusun data order yang akan disimpan
+      const orderData = {
+        eventId,
+        eventTitle: event.title, // Mengambil title dari database
+        buyerEmail: user.email, // Menggunakan email dari database
+        totalAmount: Number(body?.gross_amount),
+        paymentStatus: "paid" as const,
       };
 
-      await Order.create({
-        ...orderData,
-        event: orderData.eventId,
-        buyer: orderData.buyerId,
-      });
+      // Simpan order ke database
+      await saveOrderFromWebhook(orderData);
+      return NextResponse.json({ message: "Order saved" }, { status: 200 });
+    } catch (error) {
+      console.error("[MIDTRANS WEBHOOK] Error saving order:", error);
+      return NextResponse.json({ error: "DB Save Failed" }, { status: 500 });
     }
-
-    return NextResponse.json({ message: "OK" });
-  } catch (error) {
-    console.error("[MIDTRANS WEBHOOK ERROR]", error);
-    return new NextResponse("Webhook Error", { status: 500 });
   }
+
+  return NextResponse.json(
+    { message: "Ignored non-paid transaction" },
+    { status: 200 }
+  );
 }

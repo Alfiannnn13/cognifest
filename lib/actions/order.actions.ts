@@ -12,14 +12,14 @@ import { handleError } from "../utils";
 import { connectToDatabase } from "../database";
 import Order from "../database/models/order.model";
 import Event from "../database/models/event.model";
-import { ObjectId } from "mongodb";
 import User from "../database/models/user.model";
+import { ObjectId } from "mongodb";
 
-// FUNGSI CHECKOUT MIDTRANS
+// ========== FUNGSI CHECKOUT MIDTRANS ==========
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   try {
     const snap = new midtransClient.Snap({
-      isProduction: false, // Ubah ke true saat live
+      isProduction: false,
       serverKey: process.env.MIDTRANS_SERVER_KEY!,
     });
 
@@ -54,7 +54,7 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
   }
 };
 
-// FUNGSI SIMPAN ORDER (masih bisa dipakai kalau mau manual simpan)
+// ========== FUNGSI SIMPAN ORDER (manual biasa) ==========
 export const createOrder = async (order: CreateOrderParams) => {
   try {
     await connectToDatabase();
@@ -71,7 +71,45 @@ export const createOrder = async (order: CreateOrderParams) => {
   }
 };
 
-// GET ORDERS BY EVENT
+// ========== FUNGSI SIMPAN ORDER DARI WEBHOOK MIDTRANS ==========
+export const saveOrderFromWebhook = async ({
+  eventId,
+  eventTitle,
+  buyerEmail,
+  totalAmount,
+  paymentStatus,
+}: {
+  eventId: string;
+  eventTitle: string;
+  buyerEmail: string;
+  totalAmount: number;
+  paymentStatus: "paid" | "unpaid";
+}) => {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    if (!event) throw new Error("Event not found");
+
+    const user = await User.findOne({ email: buyerEmail });
+    if (!user) throw new Error("User not found");
+
+    const newOrder = await Order.create({
+      event: event._id,
+      eventTitle: eventTitle,
+      buyer: user._id,
+      totalAmount,
+      paymentStatus,
+    });
+
+    return JSON.parse(JSON.stringify(newOrder));
+  } catch (error) {
+    console.error("[saveOrderFromWebhook] Error:", error);
+    throw error;
+  }
+};
+
+// ========== GET ORDERS BY EVENT ==========
 export async function getOrdersByEvent({
   searchString,
   eventId,
@@ -133,7 +171,7 @@ export async function getOrdersByEvent({
   }
 }
 
-// GET ORDERS BY USER
+// ========== GET ORDERS BY USER ==========
 export async function getOrdersByUser({
   userId,
   limit = 3,
@@ -145,8 +183,7 @@ export async function getOrdersByUser({
     const skipAmount = (Number(page) - 1) * limit;
     const conditions = { buyer: userId };
 
-    const orders = await Order.distinct("event._id")
-      .find(conditions)
+    const orders = await Order.find(conditions)
       .sort({ createdAt: "desc" })
       .skip(skipAmount)
       .limit(limit)
@@ -160,9 +197,7 @@ export async function getOrdersByUser({
         },
       });
 
-    const ordersCount = await Order.distinct("event._id").countDocuments(
-      conditions
-    );
+    const ordersCount = await Order.countDocuments(conditions);
 
     return {
       data: JSON.parse(JSON.stringify(orders)),
