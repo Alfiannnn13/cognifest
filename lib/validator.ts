@@ -17,5 +17,4 @@ export const eventFormSchema = z.object({
   price: z.string(),
   isFree: z.boolean(),
   url: z.string().url(),
-  quota: z.number().min(1, "Quota must be a positive number"),
 });

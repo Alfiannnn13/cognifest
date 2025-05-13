@@ -16,8 +16,8 @@ export const headerLinks = [
   },
   {
     label: "My Profile",
-    route: "/my-profile",
-    roles: ["admin", "user"], // hanya admin
+    route: "/profile",
+    roles: ["admin", "user"], // semua user
   },
 ];
 
@@ -32,5 +32,4 @@ export const eventDefaultValues = {
   price: "",
   isFree: false,
   url: "",
-  quota: 1,
 };

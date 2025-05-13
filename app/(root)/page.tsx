@@ -30,12 +30,12 @@ export default async function Home({ searchParams }: SearchParamProps) {
         <div className="wrapper grid grid-cols-1 gap-5 md:grid-cols-2 2xl:gap-0">
           <div className="flex flex-col justify-center gap-8">
             <h1 className="h1-bold">
-              Kami Hadirkan Acara, Anda Nikmati Momen.
+              We bring the event, you enjoy the moment.
             </h1>
             <p className="p-regular-20 md:p-regular-24">
-              Dari konser musik hingga festival kuliner, kami menghubungkan Anda
-              dengan pengalaman terbaik dari para profesional dan kreator acara
-              ternama.
+              From inspirational seminars to exciting competitions, we present
+              the best experiences that connect you with experts and creative
+              competitors on campus.
             </p>
             <Button size="lg" asChild className="button w-full">
               <Link href="#event">Explore Now</Link>

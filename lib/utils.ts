@@ -11,39 +11,39 @@ export function cn(...inputs: ClassValue[]) {
 
 export const formatDateTime = (dateString: Date) => {
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
-    weekday: "short", // abbreviated weekday name (e.g., 'Mon')
-    month: "short", // abbreviated month name (e.g., 'Oct')
-    day: "numeric", // numeric day of the month (e.g., '25')
-    hour: "numeric", // numeric hour (e.g., '8')
-    minute: "numeric", // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+    weekday: "short", // e.g., 'Sen'
+    month: "short", // e.g., 'Okt'
+    day: "numeric", // e.g., '25'
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false, // pakai format 24 jam
   };
 
   const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: "short", // abbreviated weekday name (e.g., 'Mon')
-    month: "short", // abbreviated month name (e.g., 'Oct')
-    year: "numeric", // numeric year (e.g., '2023')
-    day: "numeric", // numeric day of the month (e.g., '25')
+    weekday: "short",
+    month: "short",
+    year: "numeric",
+    day: "numeric",
   };
 
   const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: "numeric", // numeric hour (e.g., '8')
-    minute: "numeric", // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
   };
 
   const formattedDateTime: string = new Date(dateString).toLocaleString(
-    "en-US",
+    "id-ID",
     dateTimeOptions
   );
 
   const formattedDate: string = new Date(dateString).toLocaleString(
-    "en-US",
+    "id-ID",
     dateOptions
   );
 
   const formattedTime: string = new Date(dateString).toLocaleString(
-    "en-US",
+    "id-ID",
     timeOptions
   );
 
@@ -58,9 +58,9 @@ export const convertFileToUrl = (file: File) => URL.createObjectURL(file);
 
 export const formatPrice = (price: string) => {
   const amount = parseFloat(price);
-  const formattedPrice = new Intl.NumberFormat("IDR", {
+  const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
-    currency: "Rp",
+    currency: "IDR",
   }).format(amount);
 
   return formattedPrice;
@@ -100,6 +100,11 @@ export function removeKeysFromQuery({
 }
 
 export const handleError = (error: unknown) => {
-  console.error(error);
+  console.error("Full error:", error);
+
+  if (error instanceof Error) {
+    throw new Error(error.message);
+  }
+
   throw new Error(typeof error === "string" ? error : JSON.stringify(error));
 };

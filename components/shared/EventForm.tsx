@@ -26,6 +26,7 @@
 // import "react-datepicker/dist/react-datepicker.css";
 // import { Checkbox } from "../ui/checkbox";
 // import { useRouter } from "next/navigation";
+// import { createEvent } from "@/lib/actions/event.actions";
 
 // type EventFormProps = {
 //   userId: string;
@@ -54,7 +55,7 @@
 //         return;
 //       }
 
-//       uploadedImageUrl = uploadedImages[0].url;
+//       uploadedImageUrl = uploadedImages[0].ufsUrl;
 //     }
 //     if (type === "Create") {
 //       try {
@@ -326,6 +327,7 @@
 // };
 
 // export default EventForm;
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -687,7 +689,7 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="quota"
             render={({ field }) => (
@@ -707,7 +709,7 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
         </div>
 
         <Button
