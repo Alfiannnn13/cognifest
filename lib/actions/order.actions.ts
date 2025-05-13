@@ -1,6 +1,6 @@
 "use server";
 
-import Stripe from "stripe";
+import midtransClient from "midtrans-client";
 import {
   CheckoutOrderParams,
   CreateOrderParams,
@@ -15,56 +15,59 @@ import Event from "../database/models/event.model";
 import { ObjectId } from "mongodb";
 import User from "../database/models/user.model";
 
+// FUNGSI CHECKOUT MIDTRANS
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-  const price = order.isFree ? 0 : Number(order.price) * 100;
-
   try {
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: "idr",
-            unit_amount: price,
-            product_data: {
-              name: order.eventTitle,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        eventId: order.eventId,
-        buyerId: order.buyerId,
-      },
-      mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/`,
+    const snap = new midtransClient.Snap({
+      isProduction: false, // Ubah ke true saat live
+      serverKey: process.env.MIDTRANS_SERVER_KEY!,
     });
 
-    redirect(session.url!);
+    const price = order.isFree ? 0 : Number(order.price);
+
+    const transaction = await snap.createTransaction({
+      transaction_details: {
+        order_id: `ORDER-${Date.now()}`,
+        gross_amount: price,
+      },
+      item_details: [
+        {
+          id: order.eventId,
+          price: price,
+          quantity: 1,
+          name: order.eventTitle,
+        },
+      ],
+      customer_details: {
+        first_name: "Guest",
+        email: "guest@example.com",
+      },
+      callbacks: {
+        finish: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile`,
+      },
+    });
+
+    redirect(transaction.redirect_url);
   } catch (error) {
+    console.error("Midtrans Error:", error);
     throw error;
   }
 };
 
+// FUNGSI SIMPAN ORDER (masih bisa dipakai kalau mau manual simpan)
 export const createOrder = async (order: CreateOrderParams) => {
   try {
     await connectToDatabase();
 
     const newOrder = await Order.create({
-      stripeId: order.stripeId,
-      totalAmount: order.totalAmount,
-      createdAt: order.createdAt || new Date(),
-      event: new ObjectId(order.eventId),
-      buyer: new ObjectId(order.buyerId),
+      ...order,
+      event: order.eventId,
+      buyer: order.buyerId,
     });
 
     return JSON.parse(JSON.stringify(newOrder));
   } catch (error) {
-    console.error("Create Order Error:", error);
-    throw error;
+    handleError(error);
   }
 };
 
