@@ -1,4 +1,4 @@
-import { Schema, model, models, Document } from "mongoose";
+import mongoose, { Schema, model, models, Document } from "mongoose";
 
 export interface IOrder extends Document {
   createdAt: Date;
@@ -24,27 +24,22 @@ export type IOrderItem = {
   buyer: string;
 };
 
-const OrderSchema = new Schema({
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  midtransId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  totalAmount: {
-    type: String,
-  },
-  event: {
-    type: Schema.Types.ObjectId,
+const OrderSchema = new mongoose.Schema({
+  orderId: { type: String, required: true },
+  eventId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Event",
+    required: true,
   },
-  buyer: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
+  eventTitle: { type: String, required: true }, // ⬅️ Ini WAJIB ADA
+  buyer: { type: String, required: true }, // userId dari Clerk
+  totalAmount: { type: Number, required: true },
+  status: {
+    type: String,
+    enum: ["PENDING", "SUCCESS", "FAILED"],
+    required: true,
   },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Order = models.Order || model("Order", OrderSchema);

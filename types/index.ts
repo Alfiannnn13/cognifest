@@ -147,3 +147,13 @@ export type SearchParamProps = {
   params: { id: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
+
+export interface OrderType {
+  orderId: string;
+  eventId: string;
+  eventTitle: string;
+  buyer: string;
+  totalAmount: number;
+  status: "PENDING" | "SUCCESS" | "FAILED";
+  createdAt: Date;
+}
