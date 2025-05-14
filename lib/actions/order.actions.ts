@@ -61,7 +61,7 @@ export const createOrder = async (order: CreateOrderParams) => {
 
     const newOrder = await Order.create({
       createdAt: new Date(),
-      stripeId: order.stripeId,
+      midtransId: order.midtransId,
       totalAmount: String(order.totalAmount),
       event: order.eventId,
       buyer: order.buyerId,
@@ -87,7 +87,7 @@ export const saveOrderFromWebhook = async ({
   buyerEmail: string;
   totalAmount: number;
   paymentStatus: "paid" | "unpaid";
-  transactionId: string;
+  transactionId?: string;
 }) => {
   try {
     await connectToDatabase();
@@ -103,7 +103,7 @@ export const saveOrderFromWebhook = async ({
     // Buat order baru dengan data yang valid
     const newOrder = await Order.create({
       createdAt: new Date(), // Waktu order dibuat
-      stripeId: transactionId, // ID transaksi Midtrans (bisa disesuaikan jika perlu)
+      midtransId: transactionId, // ID transaksi Midtrans (bisa disesuaikan jika perlu)
       totalAmount: String(totalAmount), // Total jumlah yang dibayar (konversi ke string)
       event: event._id, // ID event yang dibeli
       eventTitle: eventTitle, // Judul event
