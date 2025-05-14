@@ -1,42 +1,51 @@
-import { NextResponse } from "next/server";
-import { saveOrderFromWebhook } from "@/lib/actions/order.actions";
-import mongoose from "mongoose";
-import Event from "@/lib/database/models/event.model"; // buat ambil title dari DB
+import { NextRequest, NextResponse } from "next/server";
+import { createOrder } from "@/lib/actions/order.actions";
+import { connectToDatabase } from "@/lib/database";
+import Event from "@/lib/database/models/event.model";
+import crypto from "crypto";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { order_id, transaction_status, transaction_id, gross_amount } = body;
+    const {
+      transaction_status,
+      order_id,
+      custom_field1: eventId,
+      custom_field2: buyerId,
+    } = body;
 
-    const [eventId, buyerId] = order_id.split("_");
+    if (
+      transaction_status === "capture" ||
+      transaction_status === "settlement"
+    ) {
+      await connectToDatabase();
+      const event = await Event.findById(eventId);
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      console.error("[WEBHOOK] Invalid eventId format:", eventId);
+      if (!event) {
+        return NextResponse.json(
+          { message: "Event not found" },
+          { status: 404 }
+        );
+      }
+
+      await createOrder({
+        stripeId: order_id,
+        eventId,
+        eventTitle: event.title,
+        buyerId,
+        createdAt: new Date(),
+      });
+
       return NextResponse.json(
-        { message: "Invalid eventId format" },
-        { status: 400 }
+        { message: "Order created successfully" },
+        { status: 200 }
       );
     }
 
-    // ✅ Ambil eventTitle dari database
-    const event = await Event.findById(eventId).lean();
-    if (!event) {
-      return NextResponse.json({ message: "Event not found" }, { status: 404 });
-    }
-
-    await saveOrderFromWebhook({
-      eventId,
-      eventTitle: event.title, // ✅ Ambil dari DB, bukan dari Midtrans
-      buyerEmail: body.customer_email || "", // pastikan kamu enable email di Midtrans
-      totalAmount: gross_amount,
-      paymentStatus: transaction_status === "settlement" ? "paid" : "unpaid",
-      transactionId: transaction_id,
-    });
-
-    return NextResponse.json({ message: "OK" }, { status: 200 });
-  } catch (err) {
-    console.error("[MIDTRANS WEBHOOK ERROR]", err);
-    return NextResponse.json({ message: "Webhook Error" }, { status: 500 });
+    return NextResponse.json({ message: "No action taken" }, { status: 200 });
+  } catch (error) {
+    console.error("[MIDTRANS_WEBHOOK_ERROR]", error);
+    return NextResponse.json({ error: "Webhook error" }, { status: 500 });
   }
 }

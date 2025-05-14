@@ -1,60 +1,48 @@
 "use client";
 
-import React, { useEffect, useTransition } from "react";
-import { IEvent } from "@/lib/database/models/event.model";
-import { Button } from "../ui/button";
 import { checkoutOrder } from "@/lib/actions/order.actions";
-import { useUser } from "@clerk/nextjs"; // 🔥 import user Clerk
+import { CheckoutOrderParams } from "@/types";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { Button } from "../ui/button";
 
-const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
+type CheckoutProps = {
+  userId: string;
+  eventId: string;
+  eventTitle: string;
+  price: number;
+  isFree: boolean;
+};
+
+const Checkout = ({
+  userId,
+  eventId,
+  eventTitle,
+  price,
+  isFree,
+}: CheckoutProps) => {
   const [isPending, startTransition] = useTransition();
-  const { user: clerkUser } = useUser(); // 🧠 Ambil user Clerk
+  const router = useRouter();
 
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get("success")) {
-      console.log("Order placed! You will receive an email confirmation.");
-    }
-
-    if (query.get("canceled")) {
-      console.log(
-        "Order canceled -- continue to shop around and checkout when you’re ready."
-      );
-    }
-  }, []);
-
-  const onCheckout = async () => {
-    const order = {
-      eventTitle: event.title,
-      eventId: event._id,
-      price: Number(event.price),
-      isFree: event.isFree,
-      buyerId: userId,
-      buyerEmail: clerkUser?.emailAddresses[0]?.emailAddress || "", // ✅ FIXED
-    };
-
-    try {
-      const res = await checkoutOrder(order);
-
-      if (res?.redirectUrl) {
-        window.location.href = res.redirectUrl;
-      } else {
-        console.error("Redirect URL not found in response");
+  const handleCheckout = async () => {
+    startTransition(async () => {
+      try {
+        await checkoutOrder({
+          buyerId: userId,
+          eventId,
+          eventTitle,
+          price,
+          isFree,
+        });
+      } catch (err) {
+        console.error("Checkout failed:", err);
       }
-    } catch (error) {
-      console.error("Checkout failed:", error);
-    }
+    });
   };
 
   return (
-    <Button
-      onClick={() => startTransition(onCheckout)}
-      role="link"
-      size="lg"
-      disabled={isPending}
-      className="button sm:w-fit"
-    >
-      {isPending ? "Processing..." : event.isFree ? "Get Ticket" : "Buy Ticket"}
+    <Button onClick={handleCheckout} disabled={isPending} className="w-full">
+      {isFree ? "Get Ticket" : "Buy Ticket"}
     </Button>
   );
 };

@@ -103,22 +103,20 @@ export type CreateCategoryParams = {
   categoryName: string;
 };
 
-// ====== ORDER PARAMS
-export type CheckoutOrderParams = {
-  eventId: string; // valid ObjectId
+export type CreateOrderParams = {
+  stripeId: string; // dipakai untuk order_id dari Midtrans
+  eventId: string;
   eventTitle: string;
-  buyerId: string; // user._id
-  buyerEmail: string; // dari Clerk user.email
-  price: number;
-  isFree: boolean;
+  buyerId: string;
+  createdAt: Date;
 };
 
-export type CreateOrderParams = {
-  midtransId: string; // Ganti stripeId dengan midtransId
-  eventId: string;
+export type CheckoutOrderParams = {
   buyerId: string;
-  totalAmount: string;
-  createdAt: Date;
+  eventId: string;
+  eventTitle: string;
+  price: number;
+  isFree: boolean;
 };
 
 export type GetOrdersByEventParams = {
