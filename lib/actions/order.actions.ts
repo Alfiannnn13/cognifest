@@ -7,12 +7,13 @@ import { handleError } from "../utils";
 import { connectToDatabase } from "../database";
 import Order from "../database/models/order.model";
 
+// ✅ Untuk mulai transaksi dan redirect ke Midtrans
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   const grossAmount = order.isFree ? 0 : Number(order.price);
 
   const midtransPayload = {
     transaction_details: {
-      order_id: `ORDER-${Date.now()}`, // unique order ID
+      order_id: `ORDER-${Date.now()}`,
       gross_amount: grossAmount,
     },
     item_details: [
@@ -42,6 +43,7 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
   }
 };
 
+// ✅ Simpan order setelah Midtrans berhasil (dipanggil dari webhook)
 export const createOrder = async (order: CreateOrderParams) => {
   try {
     await connectToDatabase();
@@ -53,6 +55,48 @@ export const createOrder = async (order: CreateOrderParams) => {
     });
 
     return JSON.parse(JSON.stringify(newOrder));
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// ✅ Ambil semua order berdasarkan user (untuk halaman Profile)
+export const getOrdersByUser = async (userId: string) => {
+  try {
+    await connectToDatabase();
+
+    const orders = await Order.find({ buyer: userId })
+      .populate("event")
+      .sort({ createdAt: -1 });
+
+    return JSON.parse(JSON.stringify(orders));
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// ✅ Ambil semua order berdasarkan event (untuk admin event)
+export const getOrdersByEvent = async (eventId: string) => {
+  try {
+    await connectToDatabase();
+
+    const orders = await Order.find({ event: eventId })
+      .populate("buyer")
+      .sort({ createdAt: -1 });
+
+    return JSON.parse(JSON.stringify(orders));
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// ✅ Ambil 1 order by ID
+export const getOrderById = async (orderId: string) => {
+  try {
+    await connectToDatabase();
+
+    const order = await Order.findById(orderId).populate("buyer event");
+    return JSON.parse(JSON.stringify(order));
   } catch (error) {
     handleError(error);
   }
