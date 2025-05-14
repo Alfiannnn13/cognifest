@@ -16,7 +16,7 @@ export const headerLinks = [
   },
   {
     label: "My Profile",
-    route: "#profile",
+    route: "/profile",
     roles: ["admin", "user"], // semua user
   },
 ];
