@@ -109,7 +109,7 @@ export type CreateOrderParams = {
   eventId: string;
   eventTitle: string;
   buyerId: string;
-  totalAmount: number; // Changed to number
+  totalAmount: number; // Changed to number (sesuai dengan model Order)
   midtransOrderId: string;
 };
 
@@ -117,7 +117,7 @@ export type CheckoutOrderParams = {
   eventId: string;
   eventTitle: string;
   buyerId: string;
-  price: string; // Changed to number
+  price: number; // Changed to number (sesuai dengan model Order)
   isFree: boolean;
 };
 
@@ -149,13 +149,13 @@ export type SearchParamProps = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-// ====== ORDER TYPE
-export interface OrderType {
-  orderId: string;
-  eventId: string;
-  eventTitle: string;
-  buyer: string;
-  totalAmount: number;
-  status: "PENDING" | "SUCCESS" | "FAILED";
-  createdAt: Date;
-}
+// // ====== ORDER TYPE
+// export interface OrderType {
+//   orderId: string;
+//   eventId: string;
+//   eventTitle: string;
+//   buyer: string;
+//   totalAmount: number;
+//   status: "PENDING" | "SUCCESS" | "FAILED";
+//   createdAt: Date;
+// }
