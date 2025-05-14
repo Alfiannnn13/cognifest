@@ -1,55 +1,45 @@
-import { checkoutOrder } from "@/lib/actions/order.actions";
-import { CheckoutOrderParams } from "@/types";
-import { useRouter } from "next/navigation";
-import { useTransition, useState } from "react";
+import React, { useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+
+import { IEvent } from "@/lib/database/models/event.model";
 import { Button } from "../ui/button";
+import { checkoutOrder } from "@/lib/actions/order.actions";
 
-type CheckoutProps = {
-  userId: string;
-  eventId: string;
-  eventTitle: string;
-  price: string;
-  isFree: boolean;
-};
+loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-const Checkout = ({
-  userId,
-  eventId,
-  eventTitle,
-  price,
-  isFree,
-}: CheckoutProps) => {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
+  useEffect(() => {
+    // Check to see if this is a redirect back from Checkout
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("success")) {
+      console.log("Order placed! You will receive an email confirmation.");
+    }
 
-  const handleCheckout = async () => {
-    setError(null); // Reset error before new attempt
-    startTransition(async () => {
-      try {
-        await checkoutOrder({
-          buyerId: userId,
-          eventId,
-          eventTitle,
-          price: String(price),
-          isFree,
-        });
-        router.push("/profile"); // Redirect to profile after successful checkout
-      } catch (err) {
-        console.error("Checkout failed:", err);
-        setError("Checkout failed. Please try again later.");
-      }
-    });
+    if (query.get("canceled")) {
+      console.log(
+        "Order canceled -- continue to shop around and checkout when you’re ready."
+      );
+    }
+  }, []);
+
+  const onCheckout = async () => {
+    const order = {
+      eventTitle: event.title,
+      eventId: event._id,
+      price: event.price,
+      isFree: event.isFree,
+      buyerId: userId,
+    };
+
+    await checkoutOrder(order);
   };
 
   return (
-    <div>
-      <Button onClick={handleCheckout} disabled={isPending} className="w-full">
-        {isFree ? "Get Ticket" : "Buy Ticket"}
+    <form action={onCheckout} method="post">
+      <Button type="submit" role="link" size="lg" className="button sm:w-fit">
+        {event.isFree ? "Get Ticket" : "Buy Ticket"}
       </Button>
-      {error && <p className="text-red-500 mt-2">{error}</p>}{" "}
-      {/* Show error message */}
-    </div>
+    </form>
   );
 };
 
