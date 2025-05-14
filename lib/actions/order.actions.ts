@@ -19,14 +19,14 @@ import { ObjectId } from "mongodb";
 // ========== FUNGSI CHECKOUT MIDTRANS ==========
 
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
+  const snap = new midtransClient.Snap({
+    isProduction: false,
+    serverKey: process.env.MIDTRANS_SERVER_KEY!,
+  });
+
+  const price = order.isFree ? 0 : Number(order.price);
+
   try {
-    const snap = new midtransClient.Snap({
-      isProduction: false,
-      serverKey: process.env.MIDTRANS_SERVER_KEY!,
-    });
-
-    const price = order.isFree ? 0 : Number(order.price);
-
     const transaction = await snap.createTransaction({
       transaction_details: {
         order_id: `ORDER-${Date.now()}`,
@@ -44,9 +44,6 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
         first_name: "Guest",
         email: order.buyerEmail,
       },
-      custom_field1: order.buyerId, // user._id dari MongoDB
-      custom_field2: order.eventId, // HARUS ObjectId valid
-      custom_field3: order.eventTitle, // biar lo bisa simpan langsung nanti
       callbacks: {
         finish: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile`,
       },

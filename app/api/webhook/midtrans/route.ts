@@ -1,92 +1,41 @@
 import { NextResponse } from "next/server";
-import midtransClient from "midtrans-client";
-import { connectToDatabase } from "@/lib/database";
 import { saveOrderFromWebhook } from "@/lib/actions/order.actions";
-import User from "@/lib/database/models/user.model";
-import Event from "@/lib/database/models/event.model";
-import { ObjectId } from "mongodb"; // Mengimpor ObjectId untuk konversi
 
-export async function POST(req: Request) {
-  const body = await req.json();
+export async function POST(request: Request) {
+  const body = await request.json(); // Parse JSON dari request body
 
-  const serverKey = process.env.MIDTRANS_SERVER_KEY!;
-  const core = new midtransClient.CoreApi({
-    isProduction: false,
-    serverKey,
-  });
-
-  const signatureKey = body.signature_key;
-  const expectedSignature = require("crypto")
-    .createHash("sha512")
-    .update(body.order_id + body.status_code + body.gross_amount + serverKey)
-    .digest("hex");
-
-  if (signatureKey !== expectedSignature) {
-    console.error("[MIDTRANS] Invalid signature");
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  // Pastikan parameter penting ada dalam data
+  if (!body.transaction_status || !body.order_id || !body.payment_type) {
+    return NextResponse.json(
+      { message: "Invalid webhook data" },
+      { status: 400 }
+    );
   }
 
-  if (
-    body.transaction_status === "settlement" ||
-    body.transaction_status === "capture"
-  ) {
-    // Ambil eventId yang valid dari order_id
-    const orderId = body?.order_id; // Misalnya "ORDER-12345"
-    const eventId = orderId.split("-")[1]; // Ambil bagian setelah "-" (misalnya 12345)
+  try {
+    // Ambil data dari body yang dikirim Midtrans
+    const { transaction_status, order_id, payment_type, gross_amount, email } =
+      body;
 
-    const buyerEmail = body?.customer_details?.email; // Email dari webhook
+    // Simpan atau perbarui status order
+    await saveOrderFromWebhook({
+      eventId: order_id, // Ganti dengan ID event dari database jika diperlukan
+      eventTitle: "Some Event", // Sesuaikan dengan nama event
+      buyerEmail: email, // Ambil dari body email
+      totalAmount: gross_amount,
+      paymentStatus: transaction_status === "settlement" ? "paid" : "unpaid",
+      transactionId: body.transaction_id,
+    });
 
-    try {
-      // Koneksi ke database
-      await connectToDatabase();
-
-      // Pastikan eventId adalah ObjectId yang valid (panjang 24 karakter dan berupa hexadecimal)
-      if (!ObjectId.isValid(eventId)) {
-        console.error("[MIDTRANS WEBHOOK] Invalid eventId format");
-        return NextResponse.json(
-          { error: "Invalid eventId format" },
-          { status: 400 }
-        );
-      }
-
-      // Ambil data event dari database
-      const eventObjectId = new ObjectId(eventId); // Konversi string ke ObjectId
-      const event = await Event.findOne({ _id: eventObjectId });
-
-      if (!event) {
-        console.error("[MIDTRANS WEBHOOK] Event not found");
-        return NextResponse.json({ error: "Event not found" }, { status: 404 });
-      }
-
-      // Ambil data user berdasarkan email
-      const user = await User.findOne({ email: buyerEmail });
-
-      if (!user) {
-        console.error("[MIDTRANS WEBHOOK] User not found");
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      // Menyusun data order yang akan disimpan
-      const orderData = {
-        eventId: eventObjectId.toString(),
-        eventTitle: event.title,
-        buyerEmail: user.email,
-        totalAmount: Number(body?.gross_amount),
-        paymentStatus: "paid" as const,
-        transactionId: body?.transaction_id,
-      };
-
-      // Simpan order ke database
-      await saveOrderFromWebhook(orderData);
-      return NextResponse.json({ message: "Order saved" }, { status: 200 });
-    } catch (error) {
-      console.error("[MIDTRANS WEBHOOK] Error saving order:", error);
-      return NextResponse.json({ error: "DB Save Failed" }, { status: 500 });
-    }
+    return NextResponse.json(
+      { message: "Webhook received successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error processing Midtrans webhook:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(
-    { message: "Ignored non-paid transaction" },
-    { status: 200 }
-  );
 }
