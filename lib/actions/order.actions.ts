@@ -54,13 +54,15 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
   }
 };
 
-// ========== FUNGSI SIMPAN ORDER (manual biasa) ==========
+// ========== FUNGSI SIMPAN ORDER ==========
 export const createOrder = async (order: CreateOrderParams) => {
   try {
     await connectToDatabase();
 
     const newOrder = await Order.create({
-      ...order,
+      createdAt: new Date(),
+      stripeId: order.stripeId,
+      totalAmount: String(order.totalAmount),
       event: order.eventId,
       buyer: order.buyerId,
     });
@@ -78,34 +80,41 @@ export const saveOrderFromWebhook = async ({
   buyerEmail,
   totalAmount,
   paymentStatus,
+  transactionId,
 }: {
   eventId: string;
   eventTitle: string;
   buyerEmail: string;
   totalAmount: number;
   paymentStatus: "paid" | "unpaid";
+  transactionId: string;
 }) => {
   try {
     await connectToDatabase();
 
+    // Cari event berdasarkan eventId
     const event = await Event.findById(eventId);
     if (!event) throw new Error("Event not found");
 
+    // Cari user berdasarkan email yang dikirimkan
     const user = await User.findOne({ email: buyerEmail });
     if (!user) throw new Error("User not found");
 
+    // Buat order baru dengan data yang valid
     const newOrder = await Order.create({
-      event: event._id,
-      eventTitle: eventTitle,
-      buyer: user._id,
-      totalAmount,
-      paymentStatus,
+      createdAt: new Date(), // Waktu order dibuat
+      stripeId: transactionId, // ID transaksi Midtrans (bisa disesuaikan jika perlu)
+      totalAmount: String(totalAmount), // Total jumlah yang dibayar (konversi ke string)
+      event: event._id, // ID event yang dibeli
+      eventTitle: eventTitle, // Judul event
+      buyer: user._id, // ID pembeli (user)
+      paymentStatus: paymentStatus, // Status pembayaran (paid/unpaid)
     });
 
-    return JSON.parse(JSON.stringify(newOrder));
+    return JSON.parse(JSON.stringify(newOrder)); // Mengembalikan data order yang baru
   } catch (error) {
     console.error("[saveOrderFromWebhook] Error:", error);
-    throw error;
+    throw error; // Menangani error jika terjadi
   }
 };
 

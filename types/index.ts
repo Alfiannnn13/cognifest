@@ -113,7 +113,7 @@ export type CheckoutOrderParams = {
 };
 
 export type CreateOrderParams = {
-  stripeId: string;
+  midtransId: string; // Ganti stripeId dengan midtransId
   eventId: string;
   buyerId: string;
   totalAmount: string;

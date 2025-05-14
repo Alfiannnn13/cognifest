@@ -2,7 +2,7 @@ import { Schema, model, models, Document } from "mongoose";
 
 export interface IOrder extends Document {
   createdAt: Date;
-  stripeId: string;
+  midtransId: string; // Ganti stripeId dengan midtransId
   totalAmount: string;
   event: {
     _id: string;
@@ -29,7 +29,7 @@ const OrderSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  stripeId: {
+  midtransId: {
     type: String,
     required: true,
     unique: true,
