@@ -1,30 +1,50 @@
-import mongoose from "mongoose";
+import { Schema, model, models, Document } from "mongoose";
 
-const OrderSchema = new mongoose.Schema({
-  stripeId: {
-    type: String,
-    required: true,
-  },
+// Interface untuk tipe data Order
+export interface IOrder extends Document {
+  createdAt: Date;
+  midtransOrderId: string;
+  totalAmount: number; // Menggunakan number untuk totalAmount
   event: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Event",
-    required: true,
-  },
-  eventTitle: {
-    type: String,
-    required: true,
-  },
+    _id: string;
+    title: string;
+  };
   buyer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+// Schema untuk Order
+const OrderSchema = new Schema<IOrder>({
   createdAt: {
     type: Date,
+    default: Date.now, // Secara default, waktu pembuatan order diambil dari Date.now
+  },
+  midtransOrderId: {
+    type: String,
     required: true,
+    unique: true, // Memastikan setiap order punya ID unik dari Midtrans
+  },
+  totalAmount: {
+    type: Number, // Menggunakan tipe Number untuk totalAmount (seharusnya angka, bukan string)
+    required: true, // Total amount wajib ada untuk setiap order
+  },
+  event: {
+    type: Schema.Types.ObjectId, // Menggunakan ObjectId untuk relasi ke model Event
+    ref: "Event", // Referensi ke model Event
+    required: true, // Pastikan relasi event ada
+  },
+  buyer: {
+    type: Schema.Types.ObjectId, // Menggunakan ObjectId untuk relasi ke model User
+    ref: "User", // Referensi ke model User
+    required: true, // Pastikan relasi buyer ada
   },
 });
 
-const Order = mongoose.models.Order || mongoose.model("Order", OrderSchema);
+// Membuat model Order
+const Order = models.Order || model<IOrder>("Order", OrderSchema);
 
+// Export model
 export default Order;

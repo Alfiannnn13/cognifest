@@ -13,6 +13,7 @@ export type UpdateUserParams = {
   lastName: string;
   username: string;
   photo: string;
+  email?: string; // Optional email for update
 };
 
 // ====== EVENT PARAMS
@@ -73,7 +74,7 @@ export type GetRelatedEventsByCategoryParams = {
   categoryId: string;
   eventId: string;
   limit?: number;
-  page: number | string;
+  page: number; // Simplified to number
 };
 
 export type Event = {
@@ -103,19 +104,20 @@ export type CreateCategoryParams = {
   categoryName: string;
 };
 
+// ====== ORDER PARAMS
 export type CreateOrderParams = {
-  stripeId: string; // dipakai untuk order_id dari Midtrans
   eventId: string;
   eventTitle: string;
   buyerId: string;
-  createdAt: Date;
+  totalAmount: number; // Changed to number
+  midtransOrderId: string;
 };
 
 export type CheckoutOrderParams = {
-  buyerId: string;
   eventId: string;
   eventTitle: string;
-  price: number;
+  buyerId: string;
+  price: number; // Changed to number
   isFree: boolean;
 };
 
@@ -127,7 +129,7 @@ export type GetOrdersByEventParams = {
 export type GetOrdersByUserParams = {
   userId: string | null;
   limit?: number;
-  page: string | number | null;
+  page: number | string | null;
 };
 
 // ====== URL QUERY PARAMS
@@ -147,6 +149,7 @@ export type SearchParamProps = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
+// ====== ORDER TYPE
 export interface OrderType {
   orderId: string;
   eventId: string;

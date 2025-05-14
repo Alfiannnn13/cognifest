@@ -1,9 +1,7 @@
-"use client";
-
 import { checkoutOrder } from "@/lib/actions/order.actions";
 import { CheckoutOrderParams } from "@/types";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { Button } from "../ui/button";
 
 type CheckoutProps = {
@@ -22,9 +20,11 @@ const Checkout = ({
   isFree,
 }: CheckoutProps) => {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleCheckout = async () => {
+    setError(null); // Reset error before new attempt
     startTransition(async () => {
       try {
         await checkoutOrder({
@@ -34,16 +34,22 @@ const Checkout = ({
           price,
           isFree,
         });
+        router.push("/profile"); // Redirect to profile after successful checkout
       } catch (err) {
         console.error("Checkout failed:", err);
+        setError("Checkout failed. Please try again later.");
       }
     });
   };
 
   return (
-    <Button onClick={handleCheckout} disabled={isPending} className="w-full">
-      {isFree ? "Get Ticket" : "Buy Ticket"}
-    </Button>
+    <div>
+      <Button onClick={handleCheckout} disabled={isPending} className="w-full">
+        {isFree ? "Get Ticket" : "Buy Ticket"}
+      </Button>
+      {error && <p className="text-red-500 mt-2">{error}</p>}{" "}
+      {/* Show error message */}
+    </div>
   );
 };
 
