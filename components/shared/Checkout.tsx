@@ -8,7 +8,7 @@ type CheckoutProps = {
   userId: string;
   eventId: string;
   eventTitle: string;
-  price: number;
+  price: string;
   isFree: boolean;
 };
 
@@ -31,7 +31,7 @@ const Checkout = ({
           buyerId: userId,
           eventId,
           eventTitle,
-          price,
+          price: String(price),
           isFree,
         });
         router.push("/profile"); // Redirect to profile after successful checkout
