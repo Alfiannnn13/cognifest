@@ -42,8 +42,11 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
       ],
       customer_details: {
         first_name: "Guest",
-        email: "guest@example.com",
+        email: order.buyerEmail,
       },
+      custom_field1: order.buyerId, // user._id dari MongoDB
+      custom_field2: order.eventId, // HARUS ObjectId valid
+      custom_field3: order.eventTitle, // biar lo bisa simpan langsung nanti
       callbacks: {
         finish: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile`,
       },
