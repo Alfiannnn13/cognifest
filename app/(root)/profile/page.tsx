@@ -1,13 +1,13 @@
+import Collection from "@/components/shared/Collection";
 import { Button } from "@/components/ui/button";
 import { getEventsByUser } from "@/lib/actions/event.actions";
 import { getOrdersByUser } from "@/lib/actions/order.actions";
 import { IOrder } from "@/lib/database/models/order.model";
+import { getUserRole } from "@/lib/getUserRole";
 import { SearchParamProps } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { getUserRole } from "@/lib/getUserRole"; // Import fungsi getUserRole
-import Collection from "@/components/shared/Collection";
+import { useEffect, useState } from "react";
 
 const ProfilePage = async ({ searchParams }: SearchParamProps) => {
   const { sessionClaims } = await auth();
