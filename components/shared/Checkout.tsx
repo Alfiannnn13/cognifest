@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useTransition } from "react";
 import { IEvent } from "@/lib/database/models/event.model";
 import { Button } from "../ui/button";
 import { checkoutOrder } from "@/lib/actions/order.actions";
 
 const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
+  const [isPending, startTransition] = useTransition();
+
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     if (query.get("success")) {
@@ -28,15 +30,29 @@ const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
       buyerId: userId,
     };
 
-    await checkoutOrder(order);
+    try {
+      const res = await checkoutOrder(order);
+
+      if (res?.redirectUrl) {
+        window.location.href = res.redirectUrl;
+      } else {
+        console.error("Redirect URL not found in response");
+      }
+    } catch (error) {
+      console.error("Checkout failed:", error);
+    }
   };
 
   return (
-    <form action={onCheckout} method="post">
-      <Button type="submit" role="link" size="lg" className="button sm:w-fit">
-        {event.isFree ? "Get Ticket" : "Buy Ticket"}
-      </Button>
-    </form>
+    <Button
+      onClick={() => startTransition(onCheckout)}
+      role="link"
+      size="lg"
+      disabled={isPending}
+      className="button sm:w-fit"
+    >
+      {isPending ? "Processing..." : event.isFree ? "Get Ticket" : "Buy Ticket"}
+    </Button>
   );
 };
 

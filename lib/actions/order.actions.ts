@@ -14,8 +14,10 @@ import Order from "../database/models/order.model";
 import Event from "../database/models/event.model";
 import User from "../database/models/user.model";
 import { ObjectId } from "mongodb";
+import { isValidObjectId } from "mongoose";
 
 // ========== FUNGSI CHECKOUT MIDTRANS ==========
+
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   try {
     const snap = new midtransClient.Snap({
@@ -47,7 +49,7 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
       },
     });
 
-    redirect(transaction.redirect_url);
+    return { redirectUrl: transaction.redirect_url };
   } catch (error) {
     console.error("Midtrans Error:", error);
     throw error;
@@ -92,15 +94,17 @@ export const saveOrderFromWebhook = async ({
   try {
     await connectToDatabase();
 
-    // Cari event berdasarkan eventId
+    if (!isValidObjectId(eventId)) {
+      console.error("[MIDTRANS WEBHOOK] Invalid eventId format:", eventId);
+      throw new Error("Invalid eventId format");
+    }
+
     const event = await Event.findById(new ObjectId(eventId));
     if (!event) throw new Error("Event not found");
 
-    // Cari user berdasarkan email yang dikirimkan
     const user = await User.findOne({ email: buyerEmail });
     if (!user) throw new Error("User not found");
 
-    // Buat order baru dengan data yang valid
     const newOrder = await Order.create({
       createdAt: new Date(),
       midtransId: transactionId,
@@ -116,7 +120,6 @@ export const saveOrderFromWebhook = async ({
     throw error;
   }
 };
-
 // ========== GET ORDERS BY EVENT ==========
 export async function getOrdersByEvent({
   searchString,
