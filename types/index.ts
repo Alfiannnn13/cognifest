@@ -74,7 +74,7 @@ export type GetRelatedEventsByCategoryParams = {
   categoryId: string;
   eventId: string;
   limit?: number;
-  page: number; // Simplified to number
+  page: number | string; // Simplified to number
 };
 
 export type Event = {
