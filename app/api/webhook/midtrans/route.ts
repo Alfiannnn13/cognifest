@@ -40,10 +40,17 @@ export async function POST(req: Request) {
       // Koneksi ke database
       await connectToDatabase();
 
-      // Pastikan eventId adalah ObjectId yang valid
-      const eventObjectId = new ObjectId(eventId); // Konversi string ke ObjectId
+      // Pastikan eventId adalah ObjectId yang valid (panjang 24 karakter dan berupa hexadecimal)
+      if (!ObjectId.isValid(eventId)) {
+        console.error("[MIDTRANS WEBHOOK] Invalid eventId format");
+        return NextResponse.json(
+          { error: "Invalid eventId format" },
+          { status: 400 }
+        );
+      }
 
       // Ambil data event dari database
+      const eventObjectId = new ObjectId(eventId); // Konversi string ke ObjectId
       const event = await Event.findOne({ _id: eventObjectId });
 
       if (!event) {
