@@ -87,13 +87,13 @@ export const saveOrderFromWebhook = async ({
   buyerEmail: string;
   totalAmount: number;
   paymentStatus: "paid" | "unpaid";
-  transactionId?: string;
+  transactionId: string;
 }) => {
   try {
     await connectToDatabase();
 
     // Cari event berdasarkan eventId
-    const event = await Event.findById(eventId);
+    const event = await Event.findById(new ObjectId(eventId));
     if (!event) throw new Error("Event not found");
 
     // Cari user berdasarkan email yang dikirimkan
@@ -102,19 +102,18 @@ export const saveOrderFromWebhook = async ({
 
     // Buat order baru dengan data yang valid
     const newOrder = await Order.create({
-      createdAt: new Date(), // Waktu order dibuat
-      midtransId: transactionId, // ID transaksi Midtrans (bisa disesuaikan jika perlu)
-      totalAmount: String(totalAmount), // Total jumlah yang dibayar (konversi ke string)
-      event: event._id, // ID event yang dibeli
-      eventTitle: eventTitle, // Judul event
-      buyer: user._id, // ID pembeli (user)
-      paymentStatus: paymentStatus, // Status pembayaran (paid/unpaid)
+      createdAt: new Date(),
+      midtransId: transactionId,
+      totalAmount: String(totalAmount),
+      event: event._id,
+      buyer: user._id,
+      paymentStatus: paymentStatus,
     });
 
-    return JSON.parse(JSON.stringify(newOrder)); // Mengembalikan data order yang baru
+    return JSON.parse(JSON.stringify(newOrder));
   } catch (error) {
     console.error("[saveOrderFromWebhook] Error:", error);
-    throw error; // Menangani error jika terjadi
+    throw error;
   }
 };
 

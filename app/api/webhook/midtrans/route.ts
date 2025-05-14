@@ -68,11 +68,12 @@ export async function POST(req: Request) {
 
       // Menyusun data order yang akan disimpan
       const orderData = {
-        eventId: eventObjectId.toString(), // Menggunakan ObjectId yang valid
-        eventTitle: event.title, // Mengambil title dari database
-        buyerEmail: user.email, // Menggunakan email dari database
+        eventId: eventObjectId.toString(),
+        eventTitle: event.title,
+        buyerEmail: user.email,
         totalAmount: Number(body?.gross_amount),
         paymentStatus: "paid" as const,
+        transactionId: body?.transaction_id,
       };
 
       // Simpan order ke database
