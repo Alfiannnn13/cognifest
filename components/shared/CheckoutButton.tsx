@@ -27,7 +27,13 @@ const CheckoutButton = ({ event }: { event: IEvent }) => {
           </SignedOut>
 
           <SignedIn>
-            <Checkout event={event} userId={userId} />
+            <Checkout
+              eventId={event._id}
+              eventTitle={event.title}
+              price={event.price}
+              isFree={event.isFree}
+              userId={userId}
+            />
           </SignedIn>
         </>
       )}
