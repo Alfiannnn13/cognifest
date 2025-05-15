@@ -93,6 +93,14 @@ const OrderSchema = new Schema<IOrder>({
   },
 });
 
+export type IOrderItem = {
+  _id: string;
+  totalAmount: string;
+  createdAt: Date;
+  eventTitle: string;
+  eventId: string;
+  buyer: string;
+};
 // Membuat model Order
 const Order = models.Order || model<IOrder>("Order", OrderSchema);
 
