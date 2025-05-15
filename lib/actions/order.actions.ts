@@ -71,7 +71,7 @@ export const createOrder = async (order: CreateOrderParams) => {
 
     const newOrder = await Order.create({
       createdAt: new Date(),
-      midtransOrderId: order.midtransOrderId, // pakai midtransOrderId, sesuaikan dengan yang digunakan
+      midtransOrderId: order.midtransOrderId ?? "", // pakai midtransOrderId, sesuaikan dengan yang digunakan
       totalAmount: String(order.totalAmount),
       event: order.eventId,
       buyer: order.buyerId,

@@ -74,8 +74,7 @@ const OrderSchema = new Schema<IOrder>({
   },
   midtransOrderId: {
     type: String,
-    required: true,
-    unique: true, // Memastikan setiap order punya ID unik dari Midtrans
+    required: true, // Memastikan setiap order punya ID unik dari Midtrans
   },
   totalAmount: {
     type: Number, // Menggunakan tipe Number untuk totalAmount (seharusnya angka, bukan string)
